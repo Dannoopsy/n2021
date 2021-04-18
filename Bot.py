@@ -1,12 +1,12 @@
-import telebot
 import os
-
+from glob import glob
+import telebot
+from random import choice
 TOKEN = '1715580463:AAGSuz7c8EKO43wt_0w6-Yfct8vcOfkVO6U'
 name = ''
 num = 0
 bot = telebot.TeleBot(TOKEN)
 
-#def do_nth () :
 
 
 def reg_name(message):
@@ -22,6 +22,30 @@ def reg_num(message):
             num = int(message.text)
         except Exception:
             bot.send_message(message.from_user.id, 'Назови номер сотрудника лаборатории гаджетов будущего')
+
+def pic(message):
+    pic_list = glob('images/*')
+    if 1 <= int(message.text) <= len(pic_list)  :
+        picture = pic_list[int(message.text) - 1]
+        if os.path.exists(picture) :
+            photo = open(picture, 'rb')
+            bot.send_photo(message.from_user.id,photo)
+        else :
+            bot.send_message(message.from_user.id, 'Ты ввел некорректный номер')
+    else:
+        bot.send_message(message.from_user.id, 'Ты ввел некорректный номер')
+
+def vid(message):
+    webm_list = glob('webm/*')
+    if 1 <= int(message.text) <= len(webm_list):
+        webm = webm_list[int(message.text) - 1]
+        if os.path.exists(webm):
+            video = open(webm, 'rb')
+            bot.send_video(message.from_user.id, video)
+        else:
+            bot.send_message(message.from_user.id, 'Ты ввел некорректный номер')
+    else:
+        bot.send_message(message.from_user.id, 'Ты ввел некорректный номер')
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -72,6 +96,37 @@ def echo_all(message):
             bot.send_message(message.from_user.id, 'Извините, я не знаю Вас')
         else :
             bot.send_message(message.from_user.id, name + ', перестань волноваться, я жива и помню тебя')
+    elif message.text == 'rand pic' :
+        pic_list = glob('images/*')
+        picture = choice(pic_list)
+        photo = open(picture, 'rb')
+        bot.send_photo(message.from_user.id, photo)
+    elif message.text == 'pic' :
+        pic_list = glob ('images/*')
+        textp = ''
+        photo_num = 1
+        for pic_name in pic_list :
+            pic_name = pic_name[7:]
+            textp = textp + ' ' + pic_name + ' - ' + str(photo_num) + '\n'
+            photo_num += 1
+        bot.send_message(message.from_user.id, 'Выбери номер фото из списка:' + textp)
+        bot.register_next_step_handler(message, pic)
+    elif message.text == 'rand webm' :
+        webm_list = glob('webm/*')
+        webm = choice(webm_list)
+        video = open(webm, 'rb')
+        bot.send_video(message.from_user.id, video)
+    elif message.text == 'webm' :
+        webm_list = glob ('webm/*')
+        textw = ''
+        webm_num = 1
+        for webm_name in webm_list :
+            webm_name = webm_name[5:]
+            textw = textw + ' ' + webm_name + ' - ' + str(webm_num) + '\n'
+            webm_num += 1
+        bot.send_message(message.from_user.id, 'Выбери номер видео из списка:' + textw)
+        bot.register_next_step_handler(message, vid)
+
 
 
 bot.polling()
