@@ -1,6 +1,16 @@
 import os
 from glob import glob
 import telebot
+from telebot import types
+from telegram import Update
+from telegram import InlineKeyboardButton
+from telegram import InlineKeyboardMarkup
+from telegram.ext import CallbackContext
+from telegram.ext import CallbackQueryHandler
+from telegram.ext import Updater
+from telegram.ext import MessageHandler
+from telegram.ext import Filters
+
 from random import choice
 from db import *
 
@@ -11,12 +21,23 @@ PATH_SAVED_PICS = PATH_GOOGLE + 'images_download_from_users'
 PATH_GEN_PICS = PATH_GOOGLE + 'images'
 ANIME = PATH_GOOGLE + 'anime'
 WEBM = PATH_GOOGLE + 'webm'
+COMMAND_COUNT = 'count'
+COMMAND_LIST = 'list'
 name = ''
 num = 0
 photo_name = ''
 bot = telebot.TeleBot(TOKEN)
 
+markup = types.ReplyKeyboardMarkup(row_width=2)
+itembtn1 = types.KeyboardButton('save pic')
+itembtn2 = types.KeyboardButton('rand pic')
+itembtn3 = types.KeyboardButton('rand webm')
+itembtn4 = types.KeyboardButton('/help')
+markup.add(itembtn1, itembtn2, itembtn3, itembtn4)
+
 init_db()
+
+
 
 
 def reg_name(message):
@@ -109,7 +130,7 @@ def send_welcome(message):
 
 @bot.message_handler(commands=['help'])
 def send_welcome(message):
-    bot.reply_to(message, "Эль псай конгру")
+    bot.reply_to(message, 'Эль псай конгру' + '\n'+'Вот что я умею:' + '\n' + 'anime - рандомная аниме пикча'+ '\n' + 'webm - выбор видоса из общего хранилища')
 
 @bot.message_handler(content_types=['voice'])
 def handler(message):
@@ -135,11 +156,14 @@ def default_photo_handler(message):
         bot.send_message(message.from_user.id, 'Принял default photo')
 
 
+
+
 @bot.message_handler(func=lambda m: True)
 def echo_all(message):
-    if message.text:
+    '''if message.text:
         add_message(user_id = message.from_user.id, text = message.text)
-
+        bot.send_message(message.from_user.id, text = 'Выбирай', reply_markup=markup)
+'''
     if message.text == 'привет' :
         bot.reply_to(message, 'Я здесь, понятно!?')
     elif message.text == 'Srbija' :
@@ -203,12 +227,14 @@ def echo_all(message):
     elif message.text == 'save pic' :
         bot.send_message(message.from_user.id, 'Придумай название для фото')
         bot.register_next_step_handler(message, photo_name_handler)
-    elif message.text == '/anime':
+    elif message.text == 'anime':
         pic_list = glob(ANIME + '/*')
         picture = choice(pic_list)
         photo = open(picture, 'rb')
         bot.send_photo(message.from_user.id, photo)
-
+    if message.text:
+        add_message(user_id = message.from_user.id, text = message.text)
+        bot.send_message(message.from_user.id, text = 'Выбирай', reply_markup=markup)
 
 
 #bot.get_me()
