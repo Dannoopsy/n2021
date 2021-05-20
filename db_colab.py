@@ -1,12 +1,10 @@
 import sqlite3
 
-
-PATH_GOOGLE = 'drive/MyDrive/'
 connection = None
 
 def ensure_connection(func):
     def inner(*args, **kwargs):
-        with sqlite3.connect(PATH_GOOGLE + 'database.db') as conn:
+        with sqlite3.connect('database.db') as conn:
             res = func(*args, conn=conn, **kwargs)
         return res
     return inner
@@ -22,6 +20,7 @@ def init_db(conn, force: bool = False):
 
     if force:
         c.execute('DROP TABLE IF EXISTS user_message')
+        c.execute('DROP TABLE IF EXISTS user_names')
 
     c.execute('''
         CREATE TABLE IF NOT EXISTS user_message (
@@ -31,6 +30,16 @@ def init_db(conn, force: bool = False):
         )
     
     ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS user_names (
+            
+            user_id       INTEGER PRIMARY KEY,
+            user_name     TEXT NOT NULL
+        )
+    
+    ''')
+
+
 
     conn.commit()
 
@@ -41,6 +50,15 @@ def add_message(user_id: int, text: str, conn):
     c.execute('INSERT INTO user_message (user_id, text) VALUES (?, ?)', (user_id, text))
     conn.commit()
 
+@ensure_connection
+def add_name(user_id: int, user_name: str, conn):
+    #conn = get_connection()
+    c = conn.cursor()
+    c.execute('INSERT INTO user_message (user_id, user_name) VALUES (?, ?)', (user_id, user_name))
+    conn.commit()
+
+
+
 
 @ensure_connection
 def count_message(user_id: int, conn):
@@ -50,6 +68,18 @@ def count_message(user_id: int, conn):
     (res, ) = c.fetchall()
     conn.commit()
     return res
+
+
+@ensure_connection
+def my_name(user_id: int, limit: int = 1, conn):
+    #conn = get_connection()
+    c = conn.cursor()
+    c.execute('SELECT user_name FROM user_names WHERE user_id = ? ORDER BY id DESC LIMIT ?', (user_id, limit))
+    (res, ) = c.fetchall()
+    conn.commit()
+    return res
+
+
 
 
 @ensure_connection
