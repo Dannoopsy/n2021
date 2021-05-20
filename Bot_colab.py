@@ -21,10 +21,6 @@ PATH_SAVED_PICS = PATH_GOOGLE + 'images_download_from_users'
 PATH_GEN_PICS = PATH_GOOGLE + 'images'
 ANIME = PATH_GOOGLE + 'anime'
 WEBM = PATH_GOOGLE + 'webm'
-COMMAND_COUNT = 'count'
-COMMAND_LIST = 'list'
-name = ''
-num = 0
 photo_name = ''
 bot = telebot.TeleBot(TOKEN)
 
@@ -33,7 +29,9 @@ itembtn1 = types.KeyboardButton('save pic')
 itembtn2 = types.KeyboardButton('rand pic')
 itembtn3 = types.KeyboardButton('rand webm')
 itembtn4 = types.KeyboardButton('/help')
-markup.add(itembtn1, itembtn2, itembtn3, itembtn4)
+itembtn5 = types.KeyboardButton('count')
+itembtn6 = types.KeyboardButton('list')
+markup.add(itembtn1, itembtn2, itembtn3, itembtn4, itembtn5, itembtn6)
 
 init_db()
 
@@ -41,18 +39,9 @@ init_db()
 
 
 def reg_name(message):
-    global name
     name = message.text
-    bot.send_message(message.from_user.id, 'Назови номер, данный тебе Окарином')
-    bot.register_next_step_handler(message, reg_num)
-
-def reg_num(message):
-    global num
-    while num == 0:
-        try:
-            num = int(message.text)
-        except Exception:
-            bot.send_message(message.from_user.id, 'Назови номер сотрудника лаборатории гаджетов будущего')
+    add_name(message.from_user.id, name)
+    
 
 def picturing(message, path):
     pic_list = glob(path + '/*')
@@ -176,6 +165,7 @@ def echo_all(message):
         bot.send_message(message.from_user.id, 'Назови свое имя')
         bot.register_next_step_handler(message, reg_name)
     elif message.text == '/memory' :
+        name = my_name(message.from_user.id)
         if name == '' :
             bot.send_message(message.from_user.id, 'Извините, я не знаю Вас')
         else :
@@ -190,10 +180,10 @@ def echo_all(message):
         textp = ''
         photo_num = 1
         for pic_name in pic_list :
-            pic_name = pic_name[7:]
+            pic_name = pic_name[21:-4]
             textp = textp + ' ' + pic_name + ' - ' + str(photo_num) + '\n'
             photo_num += 1
-        bot.send_message(message.from_user.id, 'Выбери номер фото из списка:' + textp)
+        bot.send_message(message.from_user.id, 'Выбери номер фото из списка:\n' + textp)
         bot.register_next_step_handler(message, pic)
     elif message.text == 'rand webm' :
         webm_list = glob(WEBM + '/*')
@@ -205,10 +195,10 @@ def echo_all(message):
         textw = ''
         webm_num = 1
         for webm_name in webm_list :
-            webm_name = webm_name[5:]
+            webm_name = webm_name[19:-4]
             textw = textw + ' ' + webm_name + ' - ' + str(webm_num) + '\n'
             webm_num += 1
-        bot.send_message(message.from_user.id, 'Выбери номер видео из списка:' + textw)
+        bot.send_message(message.from_user.id, 'Выбери номер видео из списка:\n' + textw)
         bot.register_next_step_handler(message, vid)
     elif message.text == 'my pic' :
         path = PATH_SAVED_PICS + '/{' + str(message.from_user.id) + '}'
@@ -217,10 +207,10 @@ def echo_all(message):
             textp = ''
             photo_num = 1
             for pic_name in pic_list:
-                pic_name = pic_name[39:]
+                pic_name = pic_name[53:-4]
                 textp = textp + ' ' + pic_name + ' - ' + str(photo_num) + '\n'
                 photo_num += 1
-            bot.send_message(message.from_user.id, 'Выбери номер фото из списка:' + textp)
+            bot.send_message(message.from_user.id, 'Выбери номер фото из списка:\n' + textp)
             bot.register_next_step_handler(message, my_pic)
         else :
             bot.send_message(message.from_user.id, 'Ты еще не отправлял мне фото')
@@ -232,9 +222,23 @@ def echo_all(message):
         picture = choice(pic_list)
         photo = open(picture, 'rb')
         bot.send_photo(message.from_user.id, photo)
+    if message.text == 'count' :
+        nummes = str(count_message(user_id = message.from_user.id))
+        bot.send_message(message.from_user.id, text = 'Столько ты отправил сообщений: ' + nummes[1:-2])
+    if message.text == 'list' :
+        nummes = int(str(count_message(user_id = message.from_user.id))[1:-2])
+        nummes = min(nummes, 10)
+        listmes = list_message(user_id = message.from_user.id, limit = nummes)
+        stri = ''
+        for mes in listmes:
+            stri = stri + str(mes)[1:-2] + '\n'
+
+        bot.send_message(message.from_user.id, 'Твои сообщения начиная с последнего:\n' + stri)
+    
     if message.text:
         add_message(user_id = message.from_user.id, text = message.text)
         bot.send_message(message.from_user.id, text = 'Выбирай', reply_markup=markup)
+    
 
 
 #bot.get_me()
