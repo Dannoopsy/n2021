@@ -15,6 +15,8 @@ from random import choice
 from db import *
 
 
+
+
 TOKEN = '1715580463:AAGSuz7c8EKO43wt_0w6-Yfct8vcOfkVO6U'
 PATH_GOOGLE = 'drive/MyDrive/'
 PATH_SAVED_PICS = PATH_GOOGLE + 'images_download_from_users'
@@ -119,7 +121,8 @@ def send_welcome(message):
 
 @bot.message_handler(commands=['help'])
 def send_welcome(message):
-    bot.reply_to(message, 'Эль псай конгру' + '\n'+'Вот что я умею:' + '\n' + 'anime - рандомная аниме пикча'+ '\n' + 'webm - выбор видоса из общего хранилища')
+    bot.reply_to(message, 'Эль псай конгру' + '\n'+'Вот что я умею:' + '\n' + 'anime - рандомная аниме пикча'+ '\n' + 'webm - выбор видоса из общего хранилища' +
+                 '\n/reg - я запомню твое имя' + '\n/memory - проверь, помню ли я тебя')
 
 @bot.message_handler(content_types=['voice'])
 def handler(message):
@@ -149,10 +152,10 @@ def default_photo_handler(message):
 
 @bot.message_handler(func=lambda m: True)
 def echo_all(message):
-    '''if message.text:
+    if message.text:
         add_message(user_id = message.from_user.id, text = message.text)
-        bot.send_message(message.from_user.id, text = 'Выбирай', reply_markup=markup)
-'''
+        #bot.send_message(message.from_user.id, text = 'Выбирай', reply_markup=markup)
+
     if message.text == 'привет' :
         bot.reply_to(message, 'Я здесь, понятно!?')
     elif message.text == 'Srbija' :
@@ -165,11 +168,11 @@ def echo_all(message):
         bot.send_message(message.from_user.id, 'Назови свое имя')
         bot.register_next_step_handler(message, reg_name)
     elif message.text == '/memory' :
-        name = my_name(message.from_user.id)
-        if name == '' :
+        name = my_name(user_id = message.from_user.id)
+        if name == None :
             bot.send_message(message.from_user.id, 'Извините, я не знаю Вас')
         else :
-            bot.send_message(message.from_user.id, name + ', перестань волноваться, я жива и помню тебя')
+            bot.send_message(message.from_user.id, str(name)[2:-3] + ', перестань волноваться, я жива и помню тебя')
     elif message.text == 'rand pic' :
         pic_list = glob(PATH_GEN_PICS + '/*')
         picture = choice(pic_list)
@@ -230,13 +233,16 @@ def echo_all(message):
         nummes = min(nummes, 10)
         listmes = list_message(user_id = message.from_user.id, limit = nummes)
         stri = ''
+        i = 0
         for mes in listmes:
-            stri = stri + str(mes)[1:-2] + '\n'
+            if i != 0:
+                stri = stri + str(mes)[1:-2] + '\n'
+            i = 1
 
         bot.send_message(message.from_user.id, 'Твои сообщения начиная с последнего:\n' + stri)
     
     if message.text:
-        add_message(user_id = message.from_user.id, text = message.text)
+        #add_message(user_id = message.from_user.id, text = message.text)
         bot.send_message(message.from_user.id, text = 'Выбирай', reply_markup=markup)
     
 
