@@ -21,10 +21,11 @@ TOKEN = '1715580463:AAGSuz7c8EKO43wt_0w6-Yfct8vcOfkVO6U'
 PATH_GOOGLE = 'drive/MyDrive/'
 PATH_SAVED_PICS = PATH_GOOGLE + 'images_download_from_users'
 PATH_GEN_PICS = PATH_GOOGLE + 'images'
-ANIME = PATH_GOOGLE + 'anime'
+ANIME = PATH_GOOGLE + 'anime'     
 WEBM = PATH_GOOGLE + 'webm'
 photo_name = ''
 bot = telebot.TeleBot(TOKEN)
+key_name = 'Смотри чо ебану'
 
 markup = types.ReplyKeyboardMarkup(row_width=2)
 itembtn1 = types.KeyboardButton('save pic')
@@ -33,17 +34,26 @@ itembtn3 = types.KeyboardButton('rand webm')
 itembtn4 = types.KeyboardButton('/help')
 itembtn5 = types.KeyboardButton('count')
 itembtn6 = types.KeyboardButton('list')
-markup.add(itembtn1, itembtn2, itembtn3, itembtn4, itembtn5, itembtn6)
+itembtn7 = types.KeyboardButton(key_name)
+markup.add(itembtn1, itembtn2, itembtn3, itembtn4, itembtn7)
 
 init_db()
+if os.path.exists(PATH_GOOGLE + 'images_for_users'):
+        pass
+else:
+        os.mkdir(PATH_GOOGLE + 'images_for_users')
+
+if os.path.exists(PATH_SAVED_PICS):
+        pass
+else:
+        os.mkdir(PATH_SAVED_PICS)
+
+if os.path.exists(PATH_GOOGLE + 'images_from_users'):
+        pass
+else:
+        os.mkdir(PATH_GOOGLE + 'images_from_users')
 
 
-
-
-def reg_name(message):
-    name = message.text
-    add_name(message.from_user.id, name)
-    
 
 def picturing(message, path):
     pic_list = glob(path + '/*')
@@ -78,6 +88,55 @@ def vid(message):
             bot.send_message(message.from_user.id, 'Ты ввел некорректный номер')
     else:
         bot.send_message(message.from_user.id, 'Ты ввел некорректный номер')
+
+
+#принимает первое фото
+
+def photo_obj(message):
+    if os.path.exists(PATH_GOOGLE + 'images_for_users/{' + str(message.from_user.id) + '}'):
+        directory = PATH_GOOGLE + 'images_for_users/{' + str(message.from_user.id) + '}'
+    else:
+        os.mkdir(PATH_GOOGLE + 'images_for_users/{' + str(message.from_user.id) + '}')
+        directory = PATH_GOOGLE + 'images_for_users/{' + str(message.from_user.id) + '}'
+    if message.photo:
+        photo = message.photo[-1]
+        file_id = photo.file_id
+        file_path = bot.get_file(file_id).file_path
+        downloaded_file = bot.download_file(file_path)
+        name_obj = file_id + '.jpg'
+        new_file = open(directory + '/' + name_obj, mode='wb')
+        new_file.write(downloaded_file)
+        new_file.close()
+        bot.send_message(message.from_user.id, 'Теперь пришли фото образец')
+        bot.register_next_step_handler(message, photo_ex, name_obj)
+
+
+#принимает второе фото и отправляет первое
+
+def photo_ex(message, name_obj):
+    if os.path.exists(PATH_GOOGLE + 'images_for_users/{' + str(message.from_user.id) + '}'):
+        directory = PATH_GOOGLE + 'images_for_users/{' + str(message.from_user.id) + '}'
+    else:
+        os.mkdir(PATH_GOOGLE + 'images_for_users/{' + str(message.from_user.id) + '}')
+        directory = PATH_GOOGLE + 'images_for_users/{' + str(message.from_user.id) + '}'
+    if message.photo:
+        photo = message.photo[-1]
+        file_id = photo.file_id
+        file_path = bot.get_file(file_id).file_path
+        downloaded_file = bot.download_file(file_path)
+        name = file_id + ".jpg"
+        new_file = open(directory + '/' + name, mode='wb')
+        new_file.write(downloaded_file)
+        new_file.close()
+
+        picture = PATH_GOOGLE + 'images_for_users/{' + str(message.from_user.id) + '}/' + name_obj 
+        photo = open(picture, 'rb')
+        bot.send_photo(message.from_user.id, photo)
+    
+
+
+
+
 
 def photo_name_handler(message):
     global photo_name
@@ -118,11 +177,12 @@ def photo_handler(message):
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.reply_to(message, "Я догадываюсь, что тебя подослала Организация, чтобы выведать у меня секреты Хооина Кёмы")
+    bot.send_message(message.from_user.id, text = 'Выбирай', reply_markup=markup)
 
 @bot.message_handler(commands=['help'])
 def send_welcome(message):
     bot.reply_to(message, 'Эль псай конгру' + '\n'+'Вот что я умею:' + '\n' + 'anime - рандомная аниме пикча'+ '\n' + 'webm - выбор видоса из общего хранилища' +
-                 '\n/reg - я запомню твое имя' + '\n/memory - проверь, помню ли я тебя')
+                 '\ncount - сколько сообщений ты мне прислал' + '\nlist - твои последние сообщения')
 
 @bot.message_handler(content_types=['voice'])
 def handler(message):
@@ -164,15 +224,6 @@ def echo_all(message):
         bot.reply_to(message,'нет уроду')
     elif message.text == 'если есть на свете рай' :
         bot.reply_to(message, 'это - Краснодарский край')
-    elif message.text == '/reg' :
-        bot.send_message(message.from_user.id, 'Назови свое имя')
-        bot.register_next_step_handler(message, reg_name)
-    elif message.text == '/memory' :
-        name = my_name(user_id = message.from_user.id)
-        if name == None :
-            bot.send_message(message.from_user.id, 'Извините, я не знаю Вас')
-        else :
-            bot.send_message(message.from_user.id, str(name)[2:-3] + ', перестань волноваться, я жива и помню тебя')
     elif message.text == 'rand pic' :
         pic_list = glob(PATH_GEN_PICS + '/*')
         picture = choice(pic_list)
@@ -240,11 +291,13 @@ def echo_all(message):
             i = 1
 
         bot.send_message(message.from_user.id, 'Твои сообщения начиная с последнего:\n' + stri)
-    
-    if message.text:
+    if message.text == key_name :
+        bot.send_message(message.from_user.id, 'Пришли фото, которое мы будем менять')
+        bot.register_next_step_handler(message, photo_obj)
+    '''if message.text:
         #add_message(user_id = message.from_user.id, text = message.text)
         bot.send_message(message.from_user.id, text = 'Выбирай', reply_markup=markup)
-    
+    '''
 
 
 #bot.get_me()
