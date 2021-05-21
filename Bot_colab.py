@@ -183,6 +183,7 @@ def send_welcome(message):
 def send_welcome(message):
     bot.reply_to(message, 'Эль псай конгру' + '\n'+'Вот что я умею:' + '\n' + 'anime - рандомная аниме пикча'+ '\n' + 'webm - выбор видоса из общего хранилища' +
                  '\ncount - сколько сообщений ты мне прислал' + '\nlist - твои последние сообщения')
+    bot.register_next_step_handler(message, photo_handler)
 
 @bot.message_handler(content_types=['voice'])
 def handler(message):
