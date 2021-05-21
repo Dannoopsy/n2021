@@ -19,21 +19,12 @@ def init_db(conn, force: bool = False):
 
     if force:
         c.execute('DROP TABLE IF EXISTS user_message')
-        c.execute('DROP TABLE IF EXISTS user_names')
 
     c.execute('''
         CREATE TABLE IF NOT EXISTS user_message (
             id            INTEGER PRIMARY KEY,
             user_id       INTEGER NOT NULL,
-            text          TEXT NOT NULL
-        )
-
-    ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS user_names (
-            id            INTEGER PRIMARY KEY,
-            user_id       INTEGER NOT NULL,
-            user_name     TEXT NOT NULL
+            text          TEXT NOT NULL  
         )
 
     ''')
@@ -42,19 +33,13 @@ def init_db(conn, force: bool = False):
 
 
 @ensure_connection
-def add_message(user_id: int, text: str, conn):
+def add_message(conn, user_id: int, text: str):
     # conn = get_connection()
     c = conn.cursor()
-    c.execute('INSERT INTO user_message (user_id, text) VALUES (?, ?)', (user_id, text))
+    c.execute('INSERT INTO user_message (user_id, text, user_name) VALUES (?, ?)', (user_id, text, bol))
     conn.commit()
 
 
-@ensure_connection
-def add_name(user_id: int, user_name: str, conn):
-    # conn = get_connection()
-    c = conn.cursor()
-    c.execute('INSERT INTO user_names (user_id, user_name) VALUES (?, ?)', (user_id, user_name))
-    conn.commit()
 
 
 @ensure_connection
@@ -69,16 +54,6 @@ def count_message(user_id: int, conn):
     return res
 
 
-@ensure_connection
-def my_name(conn, user_id: int, limit: int = 1):
-    # conn = get_connection()
-    c = conn.cursor()
-    c.execute(
-        'SELECT user_name FROM user_names WHERE EXISTS( SELECT * FROM user_names WHERE user_id = ?) AND user_id = ? ORDER BY id DESC LIMIT ?',
-        (user_id, user_id, limit))
-    res = c.fetchone()
-    conn.commit()
-    return res
 
 
 @ensure_connection
@@ -86,7 +61,7 @@ def list_message(conn, user_id: int, limit: int = 10):
     # conn = get_connection()
     c = conn.cursor()
     c.execute(
-        'SELECT text FROM user_message WHERE EXISTS( SELECT * FROM user_message WHERE user_id = ?) AND user_id = ? ORDER BY id DESC LIMIT ?',
+        'SELECT text FROM user_message WHERE EXISTS( SELECT * FROM user_message WHERE user_id = ?) AND user_id = ?  ORDER BY id DESC LIMIT ?',
         (user_id, user_id, limit))
     res = c.fetchall()
     conn.commit()
