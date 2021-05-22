@@ -36,7 +36,7 @@ def init_db(conn, force: bool = False):
 def add_message(conn, user_id: int, text: str):
     # conn = get_connection()
     c = conn.cursor()
-    c.execute('INSERT INTO user_message (user_id, text, user_name) VALUES (?, ?)', (user_id, text, bol))
+    c.execute('INSERT INTO user_message (user_id, text, user_name) VALUES (?, ?)', (user_id, text))
     conn.commit()
 
 
